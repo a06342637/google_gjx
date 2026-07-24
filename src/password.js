@@ -2,7 +2,7 @@ export const CHARACTER_SETS = {
   upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
   lower: "abcdefghijklmnopqrstuvwxyz",
   digits: "0123456789",
-  symbols: "!@#$%^&*()-_=+[]{};:,.?"
+  symbols: "#@"
 };
 
 export function secureRandomInt(max) {

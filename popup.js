@@ -81,7 +81,7 @@ function showToast(message, tone = "normal") {
   elements.toast.classList.add("is-visible");
   toastTimer = setTimeout(() => {
     elements.toast.classList.remove("is-visible");
-  }, 1900);
+  }, 500);
 }
 
 function formatError(error, fallback = "操作失败，请重试") {
@@ -148,6 +148,11 @@ function resetTotpPreview(message = "——") {
   elements.totpCopy.disabled = true;
 }
 
+function updateTotpClearVisibility() {
+  const hasValue = elements.totpSecret.value.trim().length > 0;
+  elements.totpClear.hidden = !hasValue;
+}
+
 async function updateTotpPreview({ autoCopy = false } = {}) {
   const requestId = ++previewRequestId;
   const rawSecret = elements.totpSecret.value;
@@ -187,6 +192,7 @@ async function updateTotpPreview({ autoCopy = false } = {}) {
 
 function handleTotpInput() {
   lastAutoCopiedSecret = null;
+  updateTotpClearVisibility();
   clearTimeout(totpInputTimer);
   totpInputTimer = setTimeout(() => updateTotpPreview({ autoCopy: true }), 240);
 }
@@ -453,6 +459,7 @@ function bindEvents() {
   });
   elements.totpClear.addEventListener("click", () => {
     elements.totpSecret.value = "";
+    updateTotpClearVisibility();
     lastAutoCopiedSecret = null;
     elements.totpCodePanel.classList.remove("is-invalid");
     resetTotpPreview();
@@ -514,6 +521,7 @@ function bindEvents() {
 async function initialize() {
   await initializeTheme();
   bindEvents();
+  updateTotpClearVisibility();
   refreshPassword();
   try {
     await refreshAccounts();

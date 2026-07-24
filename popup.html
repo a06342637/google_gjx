@@ -46,7 +46,7 @@
           <label class="field-label" for="totpSecret">Base32 密钥</label>
           <div class="input-with-action">
             <input id="totpSecret" class="text-input monospace" type="text" autocomplete="off" spellcheck="false" placeholder="例如 JBSWY3DPEHPK3PXP" />
-            <button id="totpClear" class="inline-icon-button" type="button" aria-label="清空密钥" title="清空">
+            <button id="totpClear" class="inline-icon-button" type="button" aria-label="清空密钥" title="清空" hidden>
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
             </button>
           </div>
@@ -122,7 +122,7 @@
             <label class="choice-chip"><input id="useUpper" type="checkbox" checked /><span>A-Z</span></label>
             <label class="choice-chip"><input id="useLower" type="checkbox" checked /><span>a-z</span></label>
             <label class="choice-chip"><input id="useDigits" type="checkbox" checked /><span>0-9</span></label>
-            <label class="choice-chip"><input id="useSymbols" type="checkbox" checked /><span>!@#$%^</span></label>
+            <label class="choice-chip"><input id="useSymbols" type="checkbox" checked /><span>#@</span></label>
           </div>
         </section>
 
@@ -145,11 +145,10 @@
               </button>
             </div>
           </div>
-          <p class="section-description compact-description">混合常见英文姓名库，适合生成测试数据。</p>
         </section>
       </main>
 
-      <footer class="app-footer">本地运行 · 不上传密码或验证码 · v1.6.3</footer>
+      <footer class="app-footer">本地运行 · 不上传密码或验证码 · v1.6.4</footer>
     </div>
 
     <dialog id="editDialog" class="edit-dialog">
