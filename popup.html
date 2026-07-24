@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>工具箱</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="app-header">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path d="M12 2.75 19 5.8v5.53c0 4.32-2.72 8.2-7 9.92-4.28-1.72-7-5.6-7-9.92V5.8l7-3.05Z" />
+              <path d="m8.7 12.2 2.06 2.06 4.55-4.55" class="mark-check" />
+            </svg>
+          </div>
+          <div>
+            <h1>工具箱</h1>
+            <p>本地生成 · 隐私优先</p>
+          </div>
+        </div>
+        <button id="themeToggle" class="icon-button theme-toggle" type="button" aria-label="切换到深色模式" title="切换主题">
+          <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="3.25" />
+            <path d="M12 2.5v2M12 19.5v2M4.58 4.58l1.42 1.42M18 18l1.42 1.42M2.5 12h2M19.5 12h2M4.58 19.42 6 18M18 6l1.42-1.42" />
+          </svg>
+          <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.2 15.2A7.7 7.7 0 0 1 8.8 4.8 7.72 7.72 0 1 0 19.2 15.2Z" />
+          </svg>
+        </button>
+      </header>
+
+      <main class="tool-stack">
+        <section class="tool-card totp-card" aria-labelledby="totpHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">01 · AUTHENTICATOR</p>
+              <h2 id="totpHeading">2FA 验证码</h2>
+            </div>
+            <span class="section-badge">离线可用</span>
+          </div>
+          <p class="section-description">输入 Base32 密钥，生成 6 位动态验证码。</p>
+
+          <label class="field-label" for="totpSecret">Base32 密钥</label>
+          <div class="input-with-action">
+            <input id="totpSecret" class="text-input monospace" type="text" autocomplete="off" spellcheck="false" placeholder="例如 JBSWY3DPEHPK3PXP" />
+            <button id="totpClear" class="inline-icon-button" type="button" aria-label="清空密钥" title="清空">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+            </button>
+          </div>
+
+          <div class="code-panel" id="totpCodePanel">
+            <div class="code-panel-topline">
+              <span class="muted-label">当前验证码</span>
+              <span id="totpCountdown" class="countdown">-- 秒</span>
+            </div>
+            <div class="code-row">
+              <strong id="totpCode" class="totp-code monospace">——</strong>
+              <button id="totpCopy" class="compact-action" type="button" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="1.5" /><path d="M5.5 15V5.5A1.5 1.5 0 0 1 7 4h9.5" /></svg>
+                复制
+              </button>
+            </div>
+            <div class="progress-track" aria-hidden="true"><span id="totpProgress"></span></div>
+          </div>
+
+          <div class="save-row">
+            <input id="totpName" class="text-input" type="text" maxlength="48" placeholder="保存名称，例如 GitHub" />
+            <button id="totpSave" class="primary-button" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11l3 3V19.5H5Z" /><path d="M8 4.5v5h8v-5M8.5 19.5v-5h7v5" /></svg>
+              保存
+            </button>
+          </div>
+          <p class="privacy-note"><span class="privacy-dot"></span>密钥只保存在本机浏览器，未加密。</p>
+
+          <div class="saved-header">
+            <div>
+              <h3>已保存 2FA</h3>
+              <span id="totpCount" class="subtle-count">0 项</span>
+            </div>
+            <button id="savedToggle" class="text-button" type="button" aria-expanded="false">展开</button>
+          </div>
+          <div id="savedArea" class="saved-area is-collapsed">
+            <label class="sr-only" for="savedSearch">搜索已保存的 2FA</label>
+            <div class="search-wrap">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.8" /><path d="m15.2 15.2 4.3 4.3" /></svg>
+              <input id="savedSearch" class="text-input" type="search" placeholder="搜索名称" />
+            </div>
+            <div id="totpList" class="totp-list" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="tool-card password-card" aria-labelledby="passwordHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">02 · GENERATOR</p>
+              <h2 id="passwordHeading">随机密码</h2>
+            </div>
+            <span id="passwordStrength" class="section-badge strength-badge">强密码</span>
+          </div>
+          <div class="password-result">
+            <span id="passwordValue" class="password-value monospace">—</span>
+            <div class="result-actions">
+              <button id="passwordCopy" class="result-icon-button" type="button" aria-label="复制密码" title="复制密码">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="1.5" /><path d="M5.5 15V5.5A1.5 1.5 0 0 1 7 4h9.5" /></svg>
+              </button>
+              <button id="passwordRefresh" class="result-icon-button" type="button" aria-label="刷新密码" title="刷新密码">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4L3 9" /><path d="M3 4.5V9h4.5M4 13a8 8 0 0 0 14.9 4l2.1-2" /><path d="M21 19.5V15h-4.5" /></svg>
+              </button>
+            </div>
+          </div>
+          <div class="control-block">
+            <div class="control-label-row">
+              <label for="passwordLength">长度</label>
+              <output id="passwordLengthValue" for="passwordLength">16</output>
+            </div>
+            <input id="passwordLength" class="range-input" type="range" min="6" max="36" value="16" />
+          </div>
+          <div class="chip-grid" role="group" aria-label="密码字符类型">
+            <label class="choice-chip"><input id="useUpper" type="checkbox" checked /><span>A-Z</span></label>
+            <label class="choice-chip"><input id="useLower" type="checkbox" checked /><span>a-z</span></label>
+            <label class="choice-chip"><input id="useDigits" type="checkbox" checked /><span>0-9</span></label>
+            <label class="choice-chip"><input id="useSymbols" type="checkbox" checked /><span>!@#$%^</span></label>
+          </div>
+        </section>
+
+        <section class="tool-card name-card" aria-labelledby="nameHeading">
+          <div class="section-heading">
+            <div>
+              <p class="eyebrow">03 · IDENTITY</p>
+              <h2 id="nameHeading">美国假人名</h2>
+            </div>
+            <span id="nameSource" class="section-badge">混合词库</span>
+          </div>
+          <div class="name-result">
+            <span id="nameValue" class="name-value">正在生成…</span>
+            <div class="result-actions">
+              <button id="nameCopy" class="result-icon-button" type="button" aria-label="复制姓名" title="复制姓名" disabled>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="1.5" /><path d="M5.5 15V5.5A1.5 1.5 0 0 1 7 4h9.5" /></svg>
+              </button>
+              <button id="nameRefresh" class="result-icon-button" type="button" aria-label="刷新姓名" title="刷新姓名">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4L3 9" /><path d="M3 4.5V9h4.5M4 13a8 8 0 0 0 14.9 4l2.1-2" /><path d="M21 19.5V15h-4.5" /></svg>
+              </button>
+            </div>
+          </div>
+          <p class="section-description compact-description">混合常见英文姓名库，适合生成测试数据。</p>
+        </section>
+      </main>
+
+      <footer class="app-footer">本地运行 · 不上传密码或验证码 · v1.6.3</footer>
+    </div>
+
+    <dialog id="editDialog" class="edit-dialog">
+      <form id="editForm" method="dialog">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">EDIT ACCOUNT</p>
+            <h2>编辑 2FA</h2>
+          </div>
+          <button id="editCancelIcon" class="inline-icon-button" type="button" aria-label="关闭编辑窗口" title="关闭">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+          </button>
+        </div>
+        <label class="field-label" for="editName">名称</label>
+        <input id="editName" class="text-input" type="text" maxlength="48" />
+        <label class="field-label" for="editSecret">Base32 密钥</label>
+        <input id="editSecret" class="text-input monospace" type="text" autocomplete="off" spellcheck="false" />
+        <div class="dialog-actions">
+          <button id="editCancel" class="secondary-button" type="button">取消</button>
+          <button class="primary-button" type="submit">保存修改</button>
+        </div>
+      </form>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

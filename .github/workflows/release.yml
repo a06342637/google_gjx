@@ -1,0 +1,32 @@
+name: Build and publish release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Package extension
+        shell: bash
+        run: |
+          mkdir -p dist
+          zip -r "dist/toolbox-${GITHUB_REF_NAME}.zip" \
+            manifest.json popup.html popup.css popup.js src icons README.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "dist/toolbox-${GITHUB_REF_NAME}.zip" \
+            --title "工具箱 ${GITHUB_REF_NAME}" \
+            --generate-notes
