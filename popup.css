@@ -908,12 +908,27 @@ body::-webkit-scrollbar {
 }
 
 .app-footer {
-  padding: 4px 4px 1px;
+  display: grid;
+  justify-items: center;
+  gap: 1px;
+  padding: 3px 4px 0;
   color: var(--muted);
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.04em;
+  line-height: 1.2;
   text-align: center;
+}
+
+.app-footer a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.app-footer a:hover,
+.app-footer a:focus-visible {
+  color: var(--text);
 }
 
 .edit-dialog {

@@ -1,6 +1,6 @@
 # 工具箱
 
-一个完全本地加载的 Chrome Manifest V3 扩展（当前版本 v1.6.4），提供：
+一个完全本地加载的 Chrome Manifest V3 扩展（当前版本 v1.6.5），提供：
 
 - Base32 TOTP 2FA 验证码生成与本机保存管理
 - 6–36 位安全随机密码生成
@@ -45,7 +45,7 @@
 
 每个版本都会在 GitHub 的 [Releases](https://github.com/a06342637/google_gjx/releases) 页面提供 ZIP 下载包。下载后解压，再按上面的步骤加载解压后的文件夹即可。
 
-后续发布新版本时，只需更新 `manifest.json` 中的版本号，提交并推送同名 Git 标签（例如 `v1.6.5`）。GitHub Actions 会自动打包扩展并在 Releases 页面生成对应下载文件。
+后续发布新版本时，只需更新 `manifest.json` 中的版本号，提交并推送同名 Git 标签（例如 `v1.6.6`）。GitHub Actions 会自动打包扩展并在 Releases 页面生成对应下载文件。
 
 ## 隐私与安全
 
