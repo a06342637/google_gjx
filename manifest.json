@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "工具箱",
-  "version": "1.6.5",
+  "version": "1.6.6",
   "description": "本地 2FA、密码和美国英文姓名生成工具。",
   "action": {
     "default_title": "工具箱",

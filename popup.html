@@ -36,7 +36,7 @@
         <section class="tool-card totp-card" aria-labelledby="totpHeading">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">01 · AUTHENTICATOR</p>
+              <p class="eyebrow">03 · AUTHENTICATOR</p>
               <h2 id="totpHeading">2FA 验证码</h2>
             </div>
             <span class="section-badge">离线可用</span>
@@ -73,7 +73,7 @@
               保存
             </button>
           </div>
-          <p class="privacy-note"><span class="privacy-dot"></span>密钥只保存在本机浏览器，未加密。</p>
+          <p class="privacy-note"><span class="privacy-dot"></span>密钥只保存在本机浏览器，未加密；历史仅保存密钥和时间。</p>
 
           <div class="saved-header">
             <div>
@@ -89,6 +89,16 @@
               <input id="savedSearch" class="text-input" type="search" placeholder="搜索名称" />
             </div>
             <div id="totpList" class="totp-list" aria-live="polite"></div>
+          </div>
+
+          <div class="saved-header history-header">
+            <div>
+              <h3>2FA 历史</h3>
+              <span id="totpHistoryCount" class="subtle-count">0 条</span>
+            </div>
+          </div>
+          <div id="historyArea" class="history-area" hidden>
+            <div id="totpHistoryList" class="totp-history-list" aria-live="polite"></div>
           </div>
         </section>
 
@@ -129,7 +139,7 @@
         <section class="tool-card name-card" aria-labelledby="nameHeading">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">03 · IDENTITY</p>
+              <p class="eyebrow">01 · IDENTITY</p>
               <h2 id="nameHeading">美国假人名</h2>
             </div>
             <span id="nameSource" class="section-badge">混合词库</span>
@@ -149,7 +159,7 @@
       </main>
 
       <footer class="app-footer">
-        <span>本地运行 · 不上传密码或验证码 · v1.6.5</span>
+        <span>本地运行 · 不上传密码或验证码 · v1.6.6</span>
         <a href="https://github.com/a06342637/google_gjx" target="_blank" rel="noopener noreferrer" title="打开 GitHub 项目">
           GitHub · github.com/a06342637/google_gjx ↗
         </a>

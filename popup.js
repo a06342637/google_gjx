@@ -4,7 +4,9 @@ import { generateUsName } from "./src/names.js";
 import {
   deleteTotpAccount,
   loadTheme,
+  loadTotpHistory,
   loadTotpAccounts,
+  recordTotpHistory,
   saveTheme,
   saveTotpAccount,
   updateTotpAccount
@@ -38,6 +40,9 @@ const elements = {
   savedArea: byId("savedArea"),
   savedSearch: byId("savedSearch"),
   totpList: byId("totpList"),
+  totpHistoryCount: byId("totpHistoryCount"),
+  historyArea: byId("historyArea"),
+  totpHistoryList: byId("totpHistoryList"),
   passwordValue: byId("passwordValue"),
   passwordStrength: byId("passwordStrength"),
   passwordCopy: byId("passwordCopy"),
@@ -62,6 +67,7 @@ const elements = {
 };
 
 let accounts = [];
+let totpHistory = [];
 let currentTotp = null;
 let currentPassword = "";
 let currentName = "";
@@ -73,6 +79,7 @@ let toastTimer = null;
 let previewRequestId = 0;
 let savedCodesRequestId = 0;
 let nameRequestId = 0;
+let historyWriteQueue = Promise.resolve();
 
 function showToast(message, tone = "normal") {
   clearTimeout(toastTimer);
@@ -153,7 +160,7 @@ function updateTotpClearVisibility() {
   elements.totpClear.hidden = !hasValue;
 }
 
-async function updateTotpPreview({ autoCopy = false } = {}) {
+async function updateTotpPreview({ autoCopy = false, recordHistory = false } = {}) {
   const requestId = ++previewRequestId;
   const rawSecret = elements.totpSecret.value;
   if (!rawSecret.trim()) {
@@ -173,6 +180,10 @@ async function updateTotpPreview({ autoCopy = false } = {}) {
     elements.totpCountdown.textContent = `${result.secondsRemaining} 秒`;
     elements.totpProgress.style.width = `${(result.secondsRemaining / 30) * 100}%`;
     elements.totpCopy.disabled = false;
+
+    if (recordHistory) {
+      await rememberTotpHistory(normalized);
+    }
 
     if (autoCopy && lastAutoCopiedSecret !== normalized) {
       lastAutoCopiedSecret = normalized;
@@ -194,12 +205,62 @@ function handleTotpInput() {
   lastAutoCopiedSecret = null;
   updateTotpClearVisibility();
   clearTimeout(totpInputTimer);
-  totpInputTimer = setTimeout(() => updateTotpPreview({ autoCopy: true }), 240);
+  totpInputTimer = setTimeout(() => updateTotpPreview({ autoCopy: true, recordHistory: true }), 240);
 }
 
 async function refreshAccounts() {
   accounts = await loadTotpAccounts();
   renderAccountList();
+}
+
+function formatHistoryTime(timestamp) {
+  const date = new Date(Number(timestamp));
+  if (Number.isNaN(date.getTime())) return "时间未知";
+  const pad = (value) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
+function renderTotpHistory() {
+  elements.totpHistoryCount.textContent = `${totpHistory.length} 条`;
+  elements.totpHistoryList.replaceChildren();
+  elements.historyArea.hidden = totpHistory.length === 0;
+
+  for (const entry of totpHistory) {
+    const row = document.createElement("div");
+    row.className = "history-row";
+
+    const secret = document.createElement("span");
+    secret.className = "history-secret monospace";
+    secret.textContent = entry.secret;
+    secret.title = entry.secret;
+
+    const time = document.createElement("time");
+    time.className = "history-time";
+    time.dateTime = new Date(entry.enteredAt).toISOString();
+    time.textContent = formatHistoryTime(entry.enteredAt);
+
+    row.append(secret, time);
+    elements.totpHistoryList.append(row);
+  }
+}
+
+async function refreshTotpHistory() {
+  totpHistory = await loadTotpHistory();
+  renderTotpHistory();
+}
+
+function rememberTotpHistory(secret) {
+  historyWriteQueue = historyWriteQueue
+    .catch(() => {})
+    .then(async () => {
+      try {
+        totpHistory = await recordTotpHistory(secret);
+        renderTotpHistory();
+      } catch (error) {
+        showToast(formatError(error, "2FA 历史保存失败"), "error");
+      }
+    });
+  return historyWriteQueue;
 }
 
 function filteredAccounts() {
@@ -455,7 +516,7 @@ function bindEvents() {
   elements.themeToggle.addEventListener("click", toggleTheme);
   elements.totpSecret.addEventListener("input", handleTotpInput);
   elements.totpSecret.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") updateTotpPreview({ autoCopy: true });
+    if (event.key === "Enter") updateTotpPreview({ autoCopy: true, recordHistory: true });
   });
   elements.totpClear.addEventListener("click", () => {
     elements.totpSecret.value = "";
@@ -528,6 +589,13 @@ async function initialize() {
   } catch (error) {
     showToast(formatError(error, "读取本地 2FA 失败"), "error");
     renderAccountList();
+  }
+  try {
+    await refreshTotpHistory();
+  } catch (error) {
+    totpHistory = [];
+    renderTotpHistory();
+    showToast(formatError(error, "读取 2FA 历史失败"), "error");
   }
   refreshName();
   setInterval(() => {

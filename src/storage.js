@@ -1,4 +1,6 @@
 const ACCOUNT_KEY = "totpAccounts";
+const HISTORY_KEY = "totpHistory";
+export const MAX_TOTP_HISTORY = 100;
 const THEME_KEY = "theme";
 
 function storageArea() {
@@ -104,6 +106,39 @@ export async function deleteTotpAccount(id) {
   const accounts = await loadTotpAccounts();
   const next = accounts.filter((account) => account.id !== id);
   await storageSet({ [ACCOUNT_KEY]: next });
+  return next;
+}
+
+function cleanHistoryEntry(entry) {
+  if (!entry || typeof entry !== "object") return null;
+  const secret = typeof entry.secret === "string" ? entry.secret.trim() : "";
+  if (!secret) return null;
+  return {
+    id: typeof entry.id === "string" && entry.id ? entry.id : createId(),
+    secret,
+    enteredAt: Number.isFinite(entry.enteredAt) ? entry.enteredAt : Date.now()
+  };
+}
+
+export async function loadTotpHistory() {
+  const data = await storageGet([HISTORY_KEY]);
+  const raw = Array.isArray(data[HISTORY_KEY]) ? data[HISTORY_KEY] : [];
+  const history = raw.map(cleanHistoryEntry).filter(Boolean).slice(0, MAX_TOTP_HISTORY);
+  if (history.length !== raw.length) {
+    await storageSet({ [HISTORY_KEY]: history });
+  }
+  return history;
+}
+
+export async function recordTotpHistory(secret) {
+  const cleanedSecret = typeof secret === "string" ? secret.trim() : "";
+  if (!cleanedSecret) throw new Error("历史密钥不能为空");
+  const history = await loadTotpHistory();
+  const next = [
+    { id: createId(), secret: cleanedSecret, enteredAt: Date.now() },
+    ...history
+  ].slice(0, MAX_TOTP_HISTORY);
+  await storageSet({ [HISTORY_KEY]: next });
   return next;
 }
 
