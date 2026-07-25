@@ -1,8 +1,10 @@
 import { generateTotp, isValidSecret, normalizeSecret } from "./src/totp.js";
 import { generatePassword, passwordStrength } from "./src/password.js";
-import { generateUsName } from "./src/names.js";
+import { generateBuiltinName, generateUsName } from "./src/names.js";
 import {
+  clearTotpHistory,
   deleteTotpAccount,
+  deleteTotpHistoryEntry,
   loadTheme,
   loadTotpHistory,
   loadTotpAccounts,
@@ -41,6 +43,8 @@ const elements = {
   savedSearch: byId("savedSearch"),
   totpList: byId("totpList"),
   totpHistoryCount: byId("totpHistoryCount"),
+  historyToggle: byId("historyToggle"),
+  historyClearAll: byId("historyClearAll"),
   historyArea: byId("historyArea"),
   totpHistoryList: byId("totpHistoryList"),
   passwordValue: byId("passwordValue"),
@@ -223,23 +227,43 @@ function formatHistoryTime(timestamp) {
 function renderTotpHistory() {
   elements.totpHistoryCount.textContent = `${totpHistory.length} 条`;
   elements.totpHistoryList.replaceChildren();
-  elements.historyArea.hidden = totpHistory.length === 0;
+  elements.historyToggle.disabled = totpHistory.length === 0;
+  elements.historyClearAll.disabled = totpHistory.length === 0;
+
+  if (totpHistory.length === 0) {
+    elements.historyArea.classList.add("is-collapsed");
+    elements.historyToggle.textContent = "展开";
+    elements.historyToggle.setAttribute("aria-expanded", "false");
+  }
 
   for (const entry of totpHistory) {
     const row = document.createElement("div");
     row.className = "history-row";
 
-    const secret = document.createElement("span");
-    secret.className = "history-secret monospace";
+    const secret = document.createElement("button");
+    secret.type = "button";
+    secret.className = "history-secret-button monospace";
+    secret.dataset.historyAction = "copy";
+    secret.dataset.historyId = entry.id;
     secret.textContent = entry.secret;
-    secret.title = entry.secret;
+    secret.title = `点击复制 ${entry.secret}`;
+    secret.setAttribute("aria-label", `复制历史 2FA 密钥 ${entry.secret}`);
 
     const time = document.createElement("time");
     time.className = "history-time";
     time.dateTime = new Date(entry.enteredAt).toISOString();
     time.textContent = formatHistoryTime(entry.enteredAt);
 
-    row.append(secret, time);
+    const deleteButton = document.createElement("button");
+    deleteButton.type = "button";
+    deleteButton.className = "account-action is-danger history-delete-button";
+    deleteButton.dataset.historyAction = "delete";
+    deleteButton.dataset.historyId = entry.id;
+    deleteButton.setAttribute("aria-label", `删除历史密钥 ${entry.secret}`);
+    deleteButton.title = "删除这条历史记录";
+    deleteButton.innerHTML = ICONS.delete;
+
+    row.append(secret, time, deleteButton);
     elements.totpHistoryList.append(row);
   }
 }
@@ -249,18 +273,56 @@ async function refreshTotpHistory() {
   renderTotpHistory();
 }
 
-function rememberTotpHistory(secret) {
+function mutateTotpHistory(operation, fallbackMessage) {
   historyWriteQueue = historyWriteQueue
     .catch(() => {})
     .then(async () => {
       try {
-        totpHistory = await recordTotpHistory(secret);
+        totpHistory = await operation();
         renderTotpHistory();
+        return true;
       } catch (error) {
-        showToast(formatError(error, "2FA 历史保存失败"), "error");
+        showToast(formatError(error, fallbackMessage), "error");
+        return false;
       }
     });
   return historyWriteQueue;
+}
+
+function rememberTotpHistory(secret) {
+  return mutateTotpHistory(() => recordTotpHistory(secret), "2FA 历史保存失败");
+}
+
+async function handleHistoryAction(event) {
+  const button = event.target.closest("button[data-history-action]");
+  if (!button) return;
+  const entry = totpHistory.find((item) => item.id === button.dataset.historyId);
+  if (!entry) return;
+
+  if (button.dataset.historyAction === "copy") {
+    try {
+      await copyText(entry.secret, "2FA 密钥已复制");
+    } catch (error) {
+      showToast(formatError(error, "2FA 密钥复制失败"), "error");
+    }
+    return;
+  }
+
+  if (button.dataset.historyAction === "delete") {
+    const deleted = await mutateTotpHistory(
+      () => deleteTotpHistoryEntry(entry.id),
+      "历史记录删除失败"
+    );
+    if (deleted) showToast("历史记录已删除");
+  }
+}
+
+async function clearAllTotpHistory() {
+  if (!totpHistory.length) return;
+  const confirmed = window.confirm("确定清空全部 2FA 历史记录吗？此操作无法撤销。");
+  if (!confirmed) return;
+  const cleared = await mutateTotpHistory(clearTotpHistory, "2FA 历史清空失败");
+  if (cleared) showToast("2FA 历史已清空");
 }
 
 function filteredAccounts() {
@@ -488,6 +550,14 @@ function handlePasswordToggle(event) {
   refreshPassword();
 }
 
+function showInitialName() {
+  const result = generateBuiltinName();
+  currentName = result.fullName;
+  elements.nameValue.textContent = currentName;
+  elements.nameSource.textContent = "混合词库";
+  elements.nameCopy.disabled = false;
+}
+
 async function refreshName() {
   const requestId = ++nameRequestId;
   elements.nameRefresh.disabled = true;
@@ -543,6 +613,13 @@ function bindEvents() {
     elements.savedToggle.textContent = collapsed ? "展开" : "收起";
     elements.savedToggle.setAttribute("aria-expanded", String(!collapsed));
   });
+  elements.historyToggle.addEventListener("click", () => {
+    const collapsed = elements.historyArea.classList.toggle("is-collapsed");
+    elements.historyToggle.textContent = collapsed ? "展开" : "收起";
+    elements.historyToggle.setAttribute("aria-expanded", String(!collapsed));
+  });
+  elements.historyClearAll.addEventListener("click", clearAllTotpHistory);
+  elements.totpHistoryList.addEventListener("click", handleHistoryAction);
   elements.savedSearch.addEventListener("input", renderAccountList);
   elements.totpList.addEventListener("click", handleAccountAction);
   elements.editForm.addEventListener("submit", submitAccountEdit);
@@ -580,10 +657,11 @@ function bindEvents() {
 }
 
 async function initialize() {
+  showInitialName();
+  refreshPassword();
   await initializeTheme();
   bindEvents();
   updateTotpClearVisibility();
-  refreshPassword();
   try {
     await refreshAccounts();
   } catch (error) {
@@ -597,7 +675,6 @@ async function initialize() {
     renderTotpHistory();
     showToast(formatError(error, "读取 2FA 历史失败"), "error");
   }
-  refreshName();
   setInterval(() => {
     updateTotpPreview();
     updateSavedAccountCodes();

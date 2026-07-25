@@ -142,6 +142,18 @@ export async function recordTotpHistory(secret) {
   return next;
 }
 
+export async function deleteTotpHistoryEntry(id) {
+  const history = await loadTotpHistory();
+  const next = history.filter((entry) => entry.id !== id);
+  await storageSet({ [HISTORY_KEY]: next });
+  return next;
+}
+
+export async function clearTotpHistory() {
+  await storageSet({ [HISTORY_KEY]: [] });
+  return [];
+}
+
 export async function loadTheme() {
   const data = await storageGet([THEME_KEY]);
   return data[THEME_KEY] === "light" || data[THEME_KEY] === "dark" ? data[THEME_KEY] : null;
