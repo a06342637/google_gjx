@@ -34,6 +34,7 @@ const elements = {
   themeToggle: byId("themeToggle"),
   totpSecret: byId("totpSecret"),
   totpClear: byId("totpClear"),
+  totpSecretCopy: byId("totpSecretCopy"),
   totpCodePanel: byId("totpCodePanel"),
   totpCode: byId("totpCode"),
   totpCountdown: byId("totpCountdown"),
@@ -164,8 +165,26 @@ function resetTotpPreview(message = "——") {
 }
 
 function updateTotpClearVisibility() {
-  const hasValue = elements.totpSecret.value.trim().length > 0;
+  const secret = elements.totpSecret.value.trim();
+  const hasValue = secret.length > 0;
   elements.totpClear.hidden = !hasValue;
+  elements.totpSecretCopy.hidden = !hasValue;
+  if (hasValue) {
+    elements.totpSecretCopy.title = buildShareText(secret);
+  }
+}
+
+function reflowTotpSecretInput() {
+  const input = elements.totpSecret;
+  const raw = input.value;
+  const normalized = normalizeSecret(raw);
+  if (raw === normalized) return;
+  const caret = input.selectionStart ?? raw.length;
+  const caretAfter = normalizeSecret(raw.slice(0, caret)).length;
+  input.value = normalized;
+  if (document.activeElement === input) {
+    input.setSelectionRange(caretAfter, caretAfter);
+  }
 }
 
 async function updateTotpPreview({ autoCopy = false, recordHistory = false } = {}) {
@@ -210,6 +229,7 @@ async function updateTotpPreview({ autoCopy = false, recordHistory = false } = {
 }
 
 function handleTotpInput() {
+  reflowTotpSecretInput();
   lastAutoCopiedSecret = null;
   updateTotpClearVisibility();
   clearTimeout(totpInputTimer);
@@ -621,6 +641,15 @@ function bindEvents() {
     elements.totpCodePanel.classList.remove("is-invalid");
     resetTotpPreview();
     elements.totpSecret.focus();
+  });
+  elements.totpSecretCopy.addEventListener("click", async () => {
+    const secret = normalizeSecret(elements.totpSecret.value);
+    if (!secret) return;
+    try {
+      await copyText(buildShareText(secret), "双重验证码文案已复制");
+    } catch (error) {
+      showToast(formatError(error), "error");
+    }
   });
   elements.totpCopy.addEventListener("click", async () => {
     if (!currentTotp) return;

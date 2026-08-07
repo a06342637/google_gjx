@@ -46,9 +46,14 @@
           <label class="field-label" for="totpSecret">Base32 密钥</label>
           <div class="input-with-action">
             <input id="totpSecret" class="text-input monospace" type="text" autocomplete="off" spellcheck="false" placeholder="例如 JBSWY3DPEHPK3PXP" />
-            <button id="totpClear" class="inline-icon-button" type="button" aria-label="清空密钥" title="清空" hidden>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
-            </button>
+            <div class="input-inline-actions">
+              <button id="totpSecretCopy" class="inline-icon-button" type="button" aria-label="复制双重验证码文案" title="复制双重验证码文案" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="10" height="10" rx="1.5" /><path d="M5.5 15V5.5A1.5 1.5 0 0 1 7 4h9.5" /></svg>
+              </button>
+              <button id="totpClear" class="inline-icon-button" type="button" aria-label="清空密钥" title="清空" hidden>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6 18 18M18 6 6 18" /></svg>
+              </button>
+            </div>
           </div>
 
           <div class="code-panel" id="totpCodePanel">
@@ -163,7 +168,7 @@
       </main>
 
       <footer class="app-footer">
-        <span>本地运行 · 不上传密码或验证码 · v1.6.7</span>
+        <span>本地运行 · 不上传密码或验证码 · v1.6.8</span>
         <a href="https://github.com/a06342637/google_gjx" target="_blank" rel="noopener noreferrer" title="打开 GitHub 项目">
           GitHub · github.com/a06342637/google_gjx ↗
         </a>

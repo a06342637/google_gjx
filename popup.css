@@ -390,13 +390,20 @@ html[data-theme="dark"] .theme-icon-moon {
 }
 
 .input-with-action .text-input {
-  padding-right: 42px;
+  padding-right: 70px;
 }
 
-.input-with-action .inline-icon-button {
+.input-with-action .input-inline-actions {
   position: absolute;
   top: 50%;
   right: 5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transform: translateY(-50%);
+}
+
+.input-with-action .inline-icon-button {
   width: 26px;
   height: 26px;
   padding: 0;
@@ -404,15 +411,14 @@ html[data-theme="dark"] .theme-icon-moon {
   background: color-mix(in srgb, var(--surface-soft) 88%, transparent);
   box-shadow: 0 2px 6px color-mix(in srgb, var(--text) 7%, transparent);
   line-height: 0;
-  transform: translateY(-50%);
 }
 
 .input-with-action .inline-icon-button:hover {
-  transform: translateY(-50%) scale(1.04);
+  transform: scale(1.04);
 }
 
 .input-with-action .inline-icon-button:active {
-  transform: translateY(-50%) scale(0.96);
+  transform: scale(0.96);
 }
 
 .input-with-action .inline-icon-button svg {
