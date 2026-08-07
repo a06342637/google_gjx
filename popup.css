@@ -732,6 +732,13 @@ html[data-theme="dark"] .theme-icon-moon {
   white-space: nowrap;
 }
 
+.history-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.history-copy-button,
 .history-delete-button {
   width: 26px;
   height: 26px;

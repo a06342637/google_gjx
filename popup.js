@@ -20,6 +20,10 @@ const ICONS = {
   delete: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 7h15M9 7V4.5h6V7M7.5 7l.7 12h7.6l.7-12M10 10.5v5M14 10.5v5"></path></svg>'
 };
 
+function buildShareText(secret) {
+  return `双重验证码为（验证网站：2fa.vip）：${secret}`;
+}
+
 function byId(id) {
   const element = document.getElementById(id);
   if (!element) throw new Error(`缺少界面元素：${id}`);
@@ -263,7 +267,20 @@ function renderTotpHistory() {
     deleteButton.title = "删除这条历史记录";
     deleteButton.innerHTML = ICONS.delete;
 
-    row.append(secret, time, deleteButton);
+    const copyButton = document.createElement("button");
+    copyButton.type = "button";
+    copyButton.className = "account-action history-copy-button";
+    copyButton.dataset.historyAction = "copy-share";
+    copyButton.dataset.historyId = entry.id;
+    copyButton.setAttribute("aria-label", `复制 ${entry.secret} 的双重验证码文案`);
+    copyButton.title = buildShareText(entry.secret);
+    copyButton.innerHTML = ICONS.copy;
+
+    const actions = document.createElement("div");
+    actions.className = "history-actions";
+    actions.append(copyButton, deleteButton);
+
+    row.append(secret, time, actions);
     elements.totpHistoryList.append(row);
   }
 }
@@ -298,6 +315,15 @@ async function handleHistoryAction(event) {
   if (!button) return;
   const entry = totpHistory.find((item) => item.id === button.dataset.historyId);
   if (!entry) return;
+
+  if (button.dataset.historyAction === "copy-share") {
+    try {
+      await copyText(buildShareText(entry.secret), "双重验证码文案已复制");
+    } catch (error) {
+      showToast(formatError(error, "双重验证码文案复制失败"), "error");
+    }
+    return;
+  }
 
   if (button.dataset.historyAction === "copy") {
     try {
